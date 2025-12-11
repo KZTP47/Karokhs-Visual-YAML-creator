@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karokh's Visual YAML creator - PipelinePro - Visual Test Pipeline Builder</title>
+    
+    <!-- External Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/autofix-button-styles.css">
+    <link rel="stylesheet" href="css/enhanced-styles.css">
+</head>
+<body data-theme="dark">
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="brand"><i class="fas fa-vial" style="color:var(--accent-color)"></i> Karokh's Visual YAML creator</div>
+        <div class="platform-switch">
+            <div class="platform-opt active" id="btn-github" onclick="setPlatform('github')">
+                <i class="fab fa-github"></i> GitHub
+            </div>
+            <div class="platform-opt" id="btn-gitlab" onclick="setPlatform('gitlab')">
+                <i class="fab fa-gitlab"></i> GitLab
+            </div>
+        </div>
+        <div style="width: 1px; height: 24px; background: var(--border-color); margin: 0 10px;"></div>
+        <button class="success" onclick="openWizard()"><i class="fas fa-magic"></i> Quick Start Wizard</button>
+        <button onclick="addJob()"><i class="fas fa-plus"></i> New Job</button>
+        <button class="secondary" onclick="addExternalJob()"><i class="fas fa-link"></i> Import External</button>
+        <button class="secondary" onclick="simulatePipeline()"><i class="fas fa-play"></i> Simulate</button>
+        <div style="flex:1"></div>
+        <button class="secondary icon-btn" onclick="toggleSuggestions()" title="Smart Suggestions">
+            <i class="fas fa-lightbulb"></i>
+        </button>
+        <button class="secondary icon-btn" onclick="autoLayout()" title="Auto Arrange">
+            <i class="fas fa-project-diagram"></i>
+        </button>
+        <button class="secondary icon-btn" onclick="saveProject()" title="Save Project (JSON)">
+            <i class="fas fa-save"></i>
+        </button>
+        <button class="secondary icon-btn" onclick="document.getElementById('load-json').click()" title="Open Project (JSON)">
+            <i class="fas fa-folder-open"></i>
+        </button>
+        <button class="secondary icon-btn" onclick="document.getElementById('import-yaml').click()" title="Import from YAML">
+            <i class="fas fa-file-import"></i>
+        </button>
+        <button class="secondary icon-btn" onclick="toggleSettings()" title="Appearance Settings">
+            <i class="fas fa-palette"></i>
+        </button>
+        <button class="secondary icon-btn" onclick="clearAll()" title="Reset">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+        <button onclick="exportYaml()"><i class="fas fa-file-download"></i> Export YAML</button>
+    </div>
+
+    <!-- Hidden File Inputs -->
+    <input type="file" id="load-json" accept=".json" style="display:none" onchange="loadProject(this)">
+    <input type="file" id="import-yaml" accept=".yml,.yaml" style="display:none" onchange="importYamlFile(this)">
+
+    <!-- Settings Modal -->
+    <div id="settings-modal">
+        <div class="section-label">Theme Mode</div>
+        <div style="display:flex; gap:10px; margin-bottom: 20px;">
+            <button class="secondary" style="flex:1" onclick="setTheme('light')">Light</button>
+            <button class="secondary" style="flex:1" onclick="setTheme('dark')">Dark</button>
+        </div>
+        <div class="section-label">Custom Background</div>
+        <input type="file" id="bg-upload" accept="image/*" onchange="setBackground(this)" 
+               style="font-size:12px; color: var(--text-color);">
+        <button class="secondary" style="width:100%; margin-top:10px;" onclick="resetBackground()">
+            Reset Background
+        </button>
+    </div>
+
+    <!-- Wizard Modal -->
+    <div id="wizard-modal">
+        <div class="wizard-container">
+            <div class="wizard-header">
+                <div class="wizard-title">
+                    <i class="fas fa-magic"></i>
+                    <span>Pipeline Setup Wizard</span>
+                </div>
+                <span class="wizard-close" onclick="closeWizard()">&times;</span>
+            </div>
+            <div class="wizard-body">
+                <!-- Step 1: Template Selection -->
+                <div class="wizard-step active" id="wizard-step-1">
+                    <h3 style="margin-top: 0;">Choose a Template</h3>
+                    <p style="color: var(--text-secondary);">
+                        Select a pre-configured template that matches your testing needs:
+                    </p>
+                    <div class="template-grid" id="template-grid"></div>
+                </div>
+
+                <!-- Step 2: Project Details -->
+                <div class="wizard-step" id="wizard-step-2">
+                    <h3 style="margin-top: 0;">Project Configuration</h3>
+                    <div class="form-group">
+                        <label>Project Type 
+                            <span class="help-tooltip">
+                                <i class="fas fa-question-circle help-icon"></i>
+                                <span class="tooltiptext">What kind of application are you testing?</span>
+                            </span>
+                        </label>
+                        <select id="wizard-project-type">
+                            <option value="nodejs">Node.js / JavaScript</option>
+                            <option value="python">Python</option>
+                            <option value="java">Java / Maven</option>
+                            <option value="dotnet">.NET / C#</option>
+                            <option value="ruby">Ruby</option>
+                            <option value="go">Go</option>
+                            <option value="php">PHP</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Testing Framework 
+                            <span class="help-tooltip">
+                                <i class="fas fa-question-circle help-icon"></i>
+                                <span class="tooltiptext">What framework do you use for testing?</span>
+                            </span>
+                        </label>
+                        <select id="wizard-test-framework">
+                            <option value="jest">Jest</option>
+                            <option value="pytest">Pytest</option>
+                            <option value="mocha">Mocha</option>
+                            <option value="junit">JUnit</option>
+                            <option value="nunit">NUnit</option>
+                            <option value="rspec">RSpec</option>
+                            <option value="phpunit">PHPUnit</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Branch</label>
+                        <input type="text" id="wizard-branch" value="main" placeholder="main, develop, master">
+                    </div>
+                    <div class="checkbox-row" style="display:flex; align-items:center; gap:10px; margin-top: 12px;">
+                        <input type="checkbox" id="wizard-code-coverage" style="width:16px; height:16px;">
+                        <label for="wizard-code-coverage" style="margin:0">Enable Code Coverage Reporting</label>
+                    </div>
+                </div>
+
+                <!-- Step 3: Advanced Options -->
+                <div class="wizard-step" id="wizard-step-3">
+                    <h3 style="margin-top: 0;">Advanced Configuration</h3>
+                    <div class="form-group">
+                        <label>Enable Parallel Testing 
+                            <span class="help-tooltip">
+                                <i class="fas fa-question-circle help-icon"></i>
+                                <span class="tooltiptext">Run tests across multiple environments simultaneously</span>
+                            </span>
+                        </label>
+                        <input type="checkbox" id="wizard-parallel" style="width:16px; height:16px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Test Retry on Failure 
+                            <span class="help-tooltip">
+                                <i class="fas fa-question-circle help-icon"></i>
+                                <span class="tooltiptext">Automatically retry failed tests to handle flaky tests</span>
+                            </span>
+                        </label>
+                        <input type="checkbox" id="wizard-retry" style="width:16px; height:16px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Slack Notifications 
+                            <span class="help-tooltip">
+                                <i class="fas fa-question-circle help-icon"></i>
+                                <span class="tooltiptext">Get notified in Slack when tests fail</span>
+                            </span>
+                        </label>
+                        <input type="checkbox" id="wizard-notifications" style="width:16px; height:16px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Deploy on Success</label>
+                        <input type="checkbox" id="wizard-deploy" style="width:16px; height:16px;">
+                    </div>
+                </div>
+            </div>
+            <div class="wizard-footer">
+                <button class="secondary" id="wizard-back-btn" onclick="wizardBack()" style="display:none;">
+                    Back
+                </button>
+                <div style="flex: 1;"></div>
+                <button id="wizard-next-btn" onclick="wizardNext()">Next</button>
+                <button id="wizard-finish-btn" onclick="wizardFinish()" style="display:none;" class="success">
+                    Create Pipeline
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Suggestions Panel -->
+    <div id="suggestions-panel">
+        <div class="suggestions-header">
+            <span><i class="fas fa-lightbulb"></i> Smart Suggestions</span>
+            <i class="fas fa-times" onclick="toggleSuggestions()" style="cursor:pointer;"></i>
+        </div>
+        <div id="suggestions-list"></div>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+        <div id="graph-container" onmousedown="handleCanvasClick(event)">
+            <svg id="svg-layer"></svg>
+            <div id="empty-state-msg">
+                <i class="fas fa-vial"></i>
+                <h3>No Test Pipeline Yet</h3>
+                <p>Use the Quick Start Wizard or add jobs manually to begin.</p>
+            </div>
+            <div class="floating-actions">
+                <button class="secondary" onclick="autoLayout()" title="Auto Arrange Jobs">
+                    <i class="fas fa-magic"></i> Auto Layout
+                </button>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('config')">Configuration</div>
+                <div class="tab" onclick="switchTab('validation')">Validation</div>
+                <div class="tab" onclick="switchTab('yaml')">YAML Output</div>
+            </div>
+
+            <!-- Configuration Tab -->
+            <div id="tab-config" class="content active">
+                <div id="global-config">
+                    <div class="section-label">
+                        <i class="fas fa-cog"></i> Pipeline Settings
+                        <span class="help-tooltip">
+                            <i class="fas fa-question-circle help-icon"></i>
+                            <span class="tooltiptext">Configure when and how your pipeline runs</span>
+                        </span>
+                    </div>
+                    <div style="background: rgba(128,128,128,0.05); padding: 15px; border-radius: 8px; 
+                                border: 1px solid var(--border-color); margin-bottom: 24px;">
+                        <div class="form-group">
+                            <label>Target Branch</label>
+                            <input type="text" id="target-branch" value="main" oninput="updateGlobal()" 
+                                   placeholder="e.g. main, develop, feature/*">
+                        </div>
+                        <div class="checkbox-row" style="display:flex; align-items:center; gap:10px;">
+                            <input type="checkbox" id="trig-push" checked onchange="updateGlobal()" 
+                                   style="width:16px; height:16px;">
+                            <label for="trig-push" style="margin:0">Run on Code Push</label>
+                        </div>
+                        <div class="checkbox-row" style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+                            <input type="checkbox" id="trig-pr" onchange="updateGlobal()" 
+                                   style="width:16px; height:16px;">
+                            <label for="trig-pr" style="margin:0">Run on Pull Request</label>
+                        </div>
+                    </div>
+
+                    <div class="section-label">
+                        <i class="fas fa-layer-group"></i> Pipeline Stages
+                        <span class="help-tooltip">
+                            <i class="fas fa-question-circle help-icon"></i>
+                            <span class="tooltiptext">Stages organize jobs into logical phases (buildâ€™ testâ€™ deploy)</span>
+                        </span>
+                    </div>
+                    <div class="stage-list" id="stage-list-container"></div>
+                    <div class="add-stage-row">
+                        <input type="text" id="new-stage-input" placeholder="New Stage Name (e.g. deploy)">
+                        <button class="secondary" style="padding: 8px;" onclick="addNewStage()">Add</button>
+                    </div>
+                </div>
+
+                <div id="job-config" style="display:none;">
+                    <div class="error-banner" id="name-error-msg">
+                        <i class="fas fa-exclamation-triangle"></i> Duplicate Job Name Detected!
+                    </div>
+                    
+                    <div class="form-section">
+                        <div class="section-label"><i class="fas fa-briefcase"></i> Job Settings</div>
+                        <div class="form-group">
+                            <label>Job Name</label>
+                            <input type="text" id="job-name" oninput="updateJobName(this.value)">
+                        </div>
+                        
+                        <div id="standard-job-fields">
+                            <div class="form-group">
+                                <label>Test Category 
+                                    <span class="help-tooltip">
+                                        <i class="fas fa-question-circle help-icon"></i>
+                                        <span class="tooltiptext">Categorize your job for better organization</span>
+                                    </span>
+                                </label>
+                                <select id="job-category" onchange="updateJobCategory(this.value)">
+                                    <option value="none">None</option>
+                                    <option value="unit">Unit Tests</option>
+                                    <option value="integration">Integration Tests</option>
+                                    <option value="e2e">End-to-End Tests</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Pipeline Stage</label>
+                                <select id="job-stage" onchange="updateJobStage(this.value)"></select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Operating System / Image</label>
+                                <select id="job-os" onchange="updateJobOS(this.value)">
+                                    <option value="ubuntu-latest">Ubuntu Linux (Latest)</option>
+                                    <option value="ubuntu-20.04">Ubuntu 20.04 LTS</option>
+                                    <option value="windows-latest">Windows Server</option>
+                                    <option value="macos-latest">macOS (Latest)</option>
+                                    <option value="macos-13">macOS 13</option>
+                                    <option value="node:latest">Node.js (Docker)</option>
+                                    <option value="node:18">Node.js 18 (Docker)</option>
+                                    <option value="python:latest">Python (Docker)</option>
+                                    <option value="python:3.11">Python 3.11 (Docker)</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Matrix Configuration -->
+                            <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                                <span><i class="fas fa-table"></i> Matrix Testing (Parallel)</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="collapsible-content">
+                                <div class="form-group">
+                                    <label>Enable Matrix 
+                                        <span class="help-tooltip">
+                                            <i class="fas fa-question-circle help-icon"></i>
+                                            <span class="tooltiptext">Run this job multiple times with different configurations</span>
+                                        </span>
+                                    </label>
+                                    <input type="checkbox" id="job-matrix-enabled" onchange="updateJobMatrix()" 
+                                           style="width:16px; height:16px;">
+                                </div>
+                                <div id="matrix-config" style="display:none;">
+                                    <div class="form-group">
+                                        <label>Matrix Variables (e.g., node: 14, 16, 18)</label>
+                                        <div id="matrix-vars-list"></div>
+                                        <button class="secondary" style="margin-top: 8px; width: 100%;" 
+                                                onclick="addMatrixVar()">+ Add Variable</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Environment Variables -->
+                            <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                                <span><i class="fas fa-key"></i> Environment Variables</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="collapsible-content">
+                                <div class="form-group">
+                                    <div id="env-vars-list"></div>
+                                    <button class="secondary" style="margin-top: 8px; width: 100%;" 
+                                            onclick="addEnvVar()">+ Add Variable</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Artifacts Configuration -->
+                            <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                                <span><i class="fas fa-archive"></i> Artifacts & Reports</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="collapsible-content">
+                                <div class="form-group">
+                                    <label>Save Test Reports 
+                                        <span class="help-tooltip">
+                                            <i class="fas fa-question-circle help-icon"></i>
+                                            <span class="tooltiptext">Upload test results, coverage reports, and screenshots</span>
+                                        </span>
+                                    </label>
+                                    <div id="artifacts-list"></div>
+                                    <button class="secondary" style="margin-top: 8px; width: 100%;" 
+                                            onclick="addArtifact()">+ Add Artifact</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Retry Configuration -->
+                            <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                                <span><i class="fas fa-redo"></i> Retry Configuration</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="collapsible-content">
+                                <div class="form-group">
+                                    <label>Retry Failed Tests 
+                                        <span class="help-tooltip">
+                                            <i class="fas fa-question-circle help-icon"></i>
+                                            <span class="tooltiptext">Useful for handling flaky tests</span>
+                                        </span>
+                                    </label>
+                                    <input type="checkbox" id="job-retry-enabled" onchange="updateJobRetry()" 
+                                           style="width:16px; height:16px;">
+                                </div>
+                                <div id="retry-config" style="display:none;">
+                                    <div class="form-group">
+                                        <label>Max Retry Attempts</label>
+                                        <input type="number" id="job-retry-attempts" value="2" min="1" max="5" 
+                                               oninput="updateJobRetry()">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="external-job-fields" style="display:none">
+                            <div class="form-group">
+                                <label>External File Path / Template</label>
+                                <input type="text" id="job-external-path" placeholder="path/to/template.yml" 
+                                       oninput="updateJobExternalPath(this.value)">
+                                <div class="tooltip-text">For GitLab: use 'include'. For GitHub: use 'uses'.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section" id="steps-section">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <div class="section-label" style="margin:0">
+                                <i class="fas fa-list-ol"></i> Steps
+                            </div>
+                            <button class="secondary" style="padding:4px 8px; font-size:12px;" onclick="addStep()">
+                                + Add
+                            </button>
+                        </div>
+                        <div id="steps-list"></div>
+                    </div>
+                    
+                    <button style="width:100%; background:rgba(239, 68, 68, 0.2); color:#ef4444; 
+                                   border:1px solid #ef4444; justify-content:center;" onclick="deleteJob()">
+                        <i class="fas fa-trash"></i> Delete Job
+                    </button>
+                </div>
+            </div>
+
+            <!-- Validation Tab -->
+            <div id="tab-validation" class="content">
+                <div class="section-label"><i class="fas fa-check-circle"></i> Pipeline Validation</div>
+                <div id="validation-results"></div>
+            </div>
+
+            <!-- YAML Output Tab -->
+            <div id="tab-yaml" class="content">
+                <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12px; color: var(--text-secondary);">
+                        Generated Pipeline Configuration
+                    </span>
+                    <button class="secondary" style="padding: 4px 8px; font-size: 12px;" onclick="copyYaml()">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <textarea id="yaml-output" readonly></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Modules -->
+    <!-- Core State & Data -->
+    <script src="js/state.js"></script>
+    <script src="js/templates.js"></script>
+    
+    <!-- Step Library (loads early, no dependencies) -->
+    <script src="js/stepLibrary.js"></script>
+    <script src="js/helpSystem.js"></script>
+    
+    <!-- Rendering & Interaction -->
+    <script src="js/nodeRenderer.js"></script>
+    <script src="js/connectionManager.js"></script>
+    <script src="js/dragDrop.js"></script>
+    
+    <!-- Job Management -->
+    <script src="js/jobManager.js"></script>
+    <script src="js/yamlGenerator.js"></script>
+    
+    <!-- Validation & Auto-Fix -->
+    <script src="js/semanticValidator.js"></script>
+    <script src="js/autoFixer.js"></script>
+    <script src="js/validation.js"></script>
+    
+    <!-- UI Components -->
+    <script src="js/stageManager.js"></script>
+    <script src="js/wizard.js"></script>
+    <script src="js/suggestions.js"></script>
+    <script src="js/projectManager.js"></script>
+    <script src="js/layoutManager.js"></script>
+    <script src="js/uiManager.js"></script>
+    <script src="js/platformManager.js"></script>
+    <script src="js/simulator.js"></script>
+    
+    <!-- Enhanced UI (MUST load after JobManager) -->
+    <script src="js/enhancedUI.js"></script>
+    
+    <!-- Initialization -->
+    <script src="js/main.js"></script>
+</body>
+</html>
