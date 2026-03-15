@@ -1,14 +1,21 @@
         :root {
             --bg-color: #f3f4f6;
             --panel-bg: rgba(255, 255, 255, 0.95);
+            --bg-card: #ffffff;
+            --bg-input: #f9fafb;
+            --bg-input-rgb: 249, 250, 251;
             --text-color: #1f2937;
             --text-secondary: #6b7280;
             --border-color: #e5e7eb;
             --accent-color: #4f46e5;
+            --accent-rgb: 79, 70, 229;
             --gitlab-color: #fc6d26;
             --success-color: #10b981;
+            --success-rgb: 16, 185, 129;
             --warning-color: #f59e0b;
+            --warning-rgb: 245, 158, 11;
             --error-color: #ef4444;
+            --error-rgb: 239, 68, 68;
             --node-bg: rgba(255, 255, 255, 0.95);
             --node-shadow: rgba(0, 0, 0, 0.1);
             --test-unit-color: #3b82f6;
@@ -19,10 +26,20 @@
         [data-theme="dark"] {
             --bg-color: #0f172a;
             --panel-bg: rgba(30, 41, 59, 0.95);
+            --bg-card: #1e293b;
+            --bg-input: #283548;
+            --bg-input-rgb: 40, 53, 72;
             --text-color: #f1f5f9;
             --text-secondary: #94a3b8;
             --border-color: #334155;
             --accent-color: #6366f1;
+            --accent-rgb: 99, 102, 241;
+            --success-color: #10b981;
+            --success-rgb: 16, 185, 129;
+            --warning-color: #f59e0b;
+            --warning-rgb: 245, 158, 11;
+            --error-color: #ef4444;
+            --error-rgb: 239, 68, 68;
             --node-bg: rgba(30, 41, 59, 0.95);
             --node-shadow: rgba(0, 0, 0, 0.5);
         }
@@ -54,6 +71,15 @@
             padding: 0 24px; 
             gap: 12px; 
             z-index: 20;
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-wrap: nowrap;
+        }
+
+        .toolbar > button,
+        .toolbar > .platform-switch,
+        .toolbar > .brand {
+            flex-shrink: 0;
         }
         
         .brand { 
@@ -173,11 +199,12 @@
         }
         
         #empty-state-msg { 
-            pointer-events: none; 
+            pointer-events: auto; 
             text-align: center; 
             color: var(--text-secondary); 
-            opacity: 0.7; 
             display: none; 
+            z-index: 5;
+            position: relative;
         }
         
         #empty-state-msg i { 
@@ -888,7 +915,7 @@
 }
 
 .validation-fix::before {
-    content: '→ ';
+    content: '-> ';
     font-weight: bold;
 }
 
@@ -983,7 +1010,7 @@
 }
 
 .semantic-check-badge::before {
-    content: '✓';
+    content: '*';
     font-weight: bold;
 }
 
