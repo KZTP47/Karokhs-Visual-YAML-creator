@@ -145,7 +145,7 @@ const HelpSystem = {
             title: 'Job Dependencies',
             content: 'Connect jobs to control execution order. A job waits for all connected parent jobs to complete before running.',
             examples: ['Tests wait for build to complete', 'Deploy waits for all tests to pass', 'Integration tests wait for unit tests'],
-            tips: ['Drag from bottom circle to top circle', 'Create logical flow: build → test → deploy', 'Parallel jobs run simultaneously']
+            tips: ['Drag from bottom circle to top circle', 'Create logical flow: build > test > deploy', 'Parallel jobs run simultaneously']
         },
         'steps': {
             title: 'Job Steps',
@@ -265,7 +265,7 @@ const HelpSystem = {
             <div class="tutorial-content">
                 <div class="tutorial-header">
                     <span class="tutorial-badge">Step ${currentStep + 1} of ${totalSteps}</span>
-                    <span class="tutorial-close" onclick="HelpSystem.endTutorial()">×</span>
+                    <span class="tutorial-close" onclick="HelpSystem.endTutorial()">&times;</span>
                 </div>
                 <h3>${step.title}</h3>
                 <p>${step.message}</p>
@@ -330,7 +330,7 @@ const HelpSystem = {
             <div class="help-content">
                 <div class="help-header">
                     <h3>${help.title}</h3>
-                    <span class="help-close" onclick="this.parentElement.parentElement.parentElement.remove()">×</span>
+                    <span class="help-close" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</span>
                 </div>
                 <p>${help.content}</p>
                 ${help.examples ? `
@@ -379,7 +379,7 @@ const HelpSystem = {
             <div class="help-panel-content">
                 <div class="help-panel-header">
                     <h3>Help & Resources</h3>
-                    <span onclick="this.parentElement.parentElement.parentElement.remove()">×</span>
+                    <span onclick="this.parentElement.parentElement.parentElement.remove()">&times;</span>
                 </div>
                 <div class="help-panel-body">
                     <div class="help-category">
@@ -420,26 +420,26 @@ const HelpSystem = {
             'pipeline': {
                 title: 'What is a Pipeline?',
                 content: 'A pipeline is like a factory assembly line for your code. Each station (job) performs a specific task, and the code moves through them automatically.',
-                example: 'Think of it like: Code → Build → Test → Deploy. If tests fail, it stops before deploying broken code.',
-                visual: '📥 Code → 🔨 Build → ✅ Test → 🚀 Deploy'
+                example: 'Think of it like: Code > Build > Test > Deploy. If tests fail, it stops before deploying broken code.',
+                visual: '[Code] -> [Build] -> [Test] -> [Deploy]'
             },
             'job': {
                 title: 'What is a Job?',
                 content: 'A job is a single task in your pipeline. Each job runs independently and can do things like run tests, build your app, or deploy to a server.',
                 example: 'Like asking someone to "run all the tests" - that\'s one job. Another person might "deploy the app" - that\'s a different job.',
-                visual: '📦 Job = One complete task'
+                visual: '[Job] = One complete task'
             },
             'stage': {
                 title: 'What is a Stage?',
                 content: 'Stages group jobs that happen at the same time. All jobs in a stage must complete before the next stage starts.',
-                example: 'Build stage → Test stage → Deploy stage. All tests in the "Test" stage run at the same time.',
-                visual: 'Stage 1 → Stage 2 → Stage 3'
+                example: 'Build stage > Test stage > Deploy stage. All tests in the "Test" stage run at the same time.',
+                visual: '[Stage 1] -> [Stage 2] -> [Stage 3]'
             },
             'ci-cd': {
                 title: 'What is CI/CD?',
                 content: 'CI/CD automates testing and deployment. Continuous Integration (CI) = automatically test code. Continuous Deployment (CD) = automatically deploy if tests pass.',
-                example: 'You push code → Tests run automatically → If tests pass, it deploys automatically. No manual work!',
-                visual: '💻 Code Push → ⚙️ Auto Test → ✅ Auto Deploy'
+                example: 'You push code > Tests run automatically > If tests pass, it deploys automatically. No manual work!',
+                visual: '[Code Push] -> [Auto Test] -> [Auto Deploy]'
             }
         };
 

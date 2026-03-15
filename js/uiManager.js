@@ -122,6 +122,16 @@ const UIManager = {
         // Reinitialize components
         ConnectionManager.init('svg-layer', 'graph-container');
 
+        // Re-inject dynamically-added floating action buttons that were destroyed by innerHTML replacement
+        if (window.ConnectionHelper && window.ConnectionHelper.injectButtons) {
+            window.ConnectionHelper.injectButtons();
+        }
+
+        // Re-apply the enhanced empty state welcome cards
+        if (window.PolishV3 && window.PolishV3.enhanceEmptyState) {
+            window.PolishV3.enhanceEmptyState();
+        }
+
         YamlGenerator.updateYaml();
         Validation.validateNames();
         Validation.updateValidation();

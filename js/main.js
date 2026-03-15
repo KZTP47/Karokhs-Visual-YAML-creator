@@ -62,6 +62,8 @@ function simulatePipeline() { Simulator.simulatePipeline(); }
 function exportYaml() { YamlGenerator.exportYaml(); }
 function copyYaml() { YamlGenerator.copyYaml(); }
 
+function showNotification(msg, type) { EnhancedUI.showNotification(msg, type); }
+
 // Application initialization
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[INIT] PipelinePro initializing...');

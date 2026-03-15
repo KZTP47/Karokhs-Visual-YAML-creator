@@ -133,7 +133,7 @@ const SemanticValidator = {
             if (dependentJobs.length > 0) {
                 dependentJobs.forEach(depJob => {
                     const hasDownload = depJob.steps.some(s => 
-                        s.type === 'action' && (
+                        s.type === 'action' && s.val && (
                             s.val.includes('download-artifact') ||
                             s.val.includes('actions/download-artifact')
                         )
@@ -167,7 +167,12 @@ const SemanticValidator = {
         jobs.forEach(job => {
             if (!job.matrix) return;
             
-            const matrixKeys = Object.keys(job.matrix);
+            // Filter out non-array entries like 'enabled: true'
+            const matrixKeys = Object.keys(job.matrix).filter(function(key) {
+                return Array.isArray(job.matrix[key]);
+            });
+            if (matrixKeys.length === 0) return;
+
             const matrixIsUsed = job.steps.some(s => 
                 matrixKeys.some(key => s.val && s.val.includes('$' + '{{ matrix.' + key + ' }}'))
             );
@@ -189,10 +194,12 @@ const SemanticValidator = {
             );
             
             if (hasDockerScan && job.matrix && !matrixIsUsed) {
+                var firstArrayValue = matrixKeys.length > 0 ? job.matrix[matrixKeys[0]] : [];
+                var combinationCount = Array.isArray(firstArrayValue) ? firstArrayValue.length : 0;
                 issues.push({
                     type: 'error',
                     title: '[MATRIX] Pointless on Docker scan - "' + job.name + '"',
-                    desc: 'You\'re scanning the same Docker image ' + Object.values(job.matrix)[0].length + ' times! The matrix doesn\'t affect the scan.',
+                    desc: 'You\'re scanning the same Docker image ' + combinationCount + ' times! The matrix doesn\'t affect the scan.',
                     fix: 'Remove the matrix:\n   1. Click this job\n   2. Uncheck "Enable Matrix Testing"\n   3. Matrix should only be on jobs that run actual tests',
                     jobId: job.internalId,
                     fixType: 'remove-matrix',
@@ -218,7 +225,7 @@ const SemanticValidator = {
                 s.val && (
                     s.val.includes('npm test') ||
                     s.val.includes('npm run test') ||
-                    s.val.includes('jest') ||
+                    (s.val === 'jest' || s.val.includes('jest ') || s.val.includes('npx jest') || s.val.includes('run jest')) ||
                     s.val.includes('pytest') ||
                     s.val.includes('mvn test') ||
                     s.val.includes('gradle test') ||

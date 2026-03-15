@@ -36,7 +36,7 @@ const Wizard = {
             card.className = 'template-card';
             card.onclick = () => this.selectTemplate(key, card);
             card.innerHTML = `
-                <div class="template-icon">${template.icon}</div>
+                <div class="template-icon"><i class="${template.icon}" style="font-size: 32px; color: ${template.iconColor || 'var(--accent-color)'}"></i></div>
                 <div class="template-name">${template.name}</div>
                 <div class="template-desc">${template.description}</div>
             `;
@@ -303,12 +303,12 @@ const Wizard = {
      * Show welcome guide after pipeline creation
      */
     showWelcomeGuide(jobCount) {
-        const message = `✅ Pipeline Created Successfully!
+        const message = `Pipeline Created Successfully!
 
-📊 ${jobCount} jobs created and automatically connected
-🔗 Jobs linked by stages: build → test → deploy
-🎯 Click any job to customize
-💡 Check "Validation" tab for any improvements
+* ${jobCount} jobs created and automatically connected
+* Jobs linked by stages: build > test > deploy
+* Click any job to customize
+* Check "Validation" tab for any improvements
 
 Next Steps:
 1. Review the "Validation" tab (it now checks if your pipeline will ACTUALLY work!)

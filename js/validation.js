@@ -113,12 +113,13 @@ const Validation = {
             if (job.isExternal) return;
 
             job.steps.forEach((step, idx) => {
-                if (step.type === 'run' && !step.val.trim()) {
+                if (step.type === 'run' && !(step.val || '').trim()) {
                     // Check if this looks like it should be a checkout step
-                    const isCheckoutName = step.name.toLowerCase().includes('checkout') ||
-                                          step.name.toLowerCase().includes('clone') ||
-                                          step.name.toLowerCase().includes('pull code') ||
-                                          step.name.toLowerCase().includes('get code');
+                    const stepName = (step.name || '').toLowerCase();
+                    const isCheckoutName = stepName.includes('checkout') ||
+                                          stepName.includes('clone') ||
+                                          stepName.includes('pull code') ||
+                                          stepName.includes('get code');
                     
                     issues.push({
                         jobId: job.internalId,
@@ -131,7 +132,7 @@ const Validation = {
                     });
                 }
                 
-                if (step.type === 'action' && !step.val.trim()) {
+                if (step.type === 'action' && !(step.val || '').trim()) {
                     issues.push({
                         jobId: job.internalId,
                         jobName: job.name,
@@ -311,10 +312,20 @@ const Validation = {
             j.category === 'integration' ||
             j.category === 'e2e' ||
             j.steps.some(s => s.val && (
-                s.val.includes('test') ||
-                s.val.includes('jest') ||
+                s.val.includes('npm test') ||
+                s.val.includes('npm run test') ||
+                s.val.includes('npx jest') ||
+                s.val.includes('jest ') ||
+                s.val === 'jest' ||
                 s.val.includes('pytest') ||
-                s.val.includes('mocha')
+                s.val.includes('mocha') ||
+                s.val.includes('mvn test') ||
+                s.val.includes('gradle test') ||
+                s.val.includes('go test') ||
+                s.val.includes('dotnet test') ||
+                s.val.includes('rspec') ||
+                s.val.includes('phpunit') ||
+                s.val.includes('cargo test')
             ))
         );
 
@@ -348,15 +359,9 @@ const Validation = {
             });
         }
 
-        const flowWarnings = this.validateLogicalFlow();
-        flowWarnings.forEach(warning => {
-            validations.push({
-                type: 'warning',
-                title: 'Logical Flow Issue',
-                desc: warning.message,
-                fix: this.suggestFixes(warning.type)
-            });
-        });
+        // Logical flow warnings are now handled by SemanticValidator.validateDeploymentLogic()
+        // which provides more detailed explanations and auto-fix suggestions.
+        // Keeping the method for potential future use but not calling it in updateValidation.
 
         this.renderValidations(validations);
     },
@@ -373,14 +378,16 @@ const Validation = {
             const div = document.createElement('div');
             div.className = `validation-item ${v.type}`;
 
-            let icon = 'CHECK';
-            if (v.type === 'warning') icon = 'WARNING';
-            if (v.type === 'error') icon = 'ERROR';
-            if (v.type === 'info') icon = 'INFO';
+            let iconClass = 'fas fa-check-circle';
+            if (v.type === 'warning') iconClass = 'fas fa-exclamation-triangle';
+            if (v.type === 'error') iconClass = 'fas fa-times-circle';
+            if (v.type === 'info') iconClass = 'fas fa-info-circle';
 
             const iconDiv = document.createElement('div');
             iconDiv.className = 'validation-icon';
-            iconDiv.textContent = icon;
+            const iconEl = document.createElement('i');
+            iconEl.className = iconClass;
+            iconDiv.appendChild(iconEl);
 
             const contentDiv = document.createElement('div');
             contentDiv.className = 'validation-content';
@@ -426,7 +433,9 @@ const Validation = {
                         AutoFixer.applyFix(issueData);
                     } catch (error) {
                         console.error('Error applying fix:', error);
-                        alert('Error applying fix. Please try again.');
+                        if (window.showNotification) {
+                            window.showNotification('Error applying fix. Please try again.', 'error');
+                        }
                     }
                 });
 

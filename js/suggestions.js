@@ -27,7 +27,7 @@ const Suggestions = {
         const suggestions = this.generateSuggestions();
 
         if (suggestions.length === 0) {
-            list.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-secondary);">âœ¨ Your pipeline looks great!</div>';
+            list.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-secondary);"><i class="fas fa-check-circle" style="color: var(--success-color); margin-right: 8px;"></i>Your pipeline looks great!</div>';
             return;
         }
 
@@ -37,7 +37,7 @@ const Suggestions = {
             div.onclick = s.action;
             div.innerHTML = `
                 <div class="suggestion-title">
-                    <span>${s.icon}</span>
+                    <i class="${s.icon}" style="margin-right: 8px;"></i>
                     <span>${s.title}</span>
                 </div>
                 <div class="suggestion-desc">${s.desc}</div>
@@ -57,7 +57,7 @@ const Suggestions = {
         // Suggest starting with a template if empty
         if (jobs.length === 0) {
             suggestions.push({
-                icon: '',
+                icon: 'fas fa-magic',
                 title: 'Start with a template',
                 desc: 'Use the Quick Start Wizard for pre-configured pipelines',
                 action: () => Wizard.openWizard()
@@ -72,7 +72,7 @@ const Suggestions = {
 
         if (!hasCheckoutStep && jobs.length > 0) {
             suggestions.push({
-                icon: '',
+                icon: 'fas fa-code-branch',
                 title: 'Add checkout step',
                 desc: 'Most jobs need to checkout code first',
                 action: () => {
@@ -97,7 +97,7 @@ const Suggestions = {
 
         if (!hasCaching && jobs.length > 2) {
             suggestions.push({
-                icon: '',
+                icon: 'fas fa-bolt',
                 title: 'Add dependency caching',
                 desc: 'Speed up builds by caching node_modules or pip packages',
                 action: () => alert('Add a caching action/step to your build job')
@@ -109,7 +109,7 @@ const Suggestions = {
 
         if (!hasParallelTests && jobs.filter(j => j.category === 'unit' || j.category === 'integration').length >= 2) {
             suggestions.push({
-                icon: '',
+                icon: 'fas fa-table',
                 title: 'Enable parallel testing',
                 desc: 'Run tests faster with matrix builds',
                 action: () => {
@@ -133,7 +133,7 @@ const Suggestions = {
 
         if (disconnectedJobs.length > 1) {
             suggestions.push({
-                icon: '',
+                icon: 'fas fa-link',
                 title: 'Connect your jobs',
                 desc: 'Create dependencies between jobs to control execution order',
                 action: () => LayoutManager.autoLayout()
@@ -150,7 +150,7 @@ const Suggestions = {
 
         if (hasTestJobs && !hasArtifacts) {
             suggestions.push({
-                icon: '',
+                icon: 'fas fa-archive',
                 title: 'Save test artifacts',
                 desc: 'Upload test reports and coverage data',
                 action: () => {
@@ -171,7 +171,7 @@ const Suggestions = {
 
         if (hasE2E && !hasRetry) {
             suggestions.push({
-                icon: '',
+                icon: 'fas fa-redo',
                 title: 'Add retry for E2E tests',
                 desc: 'E2E tests can be flaky - consider adding retry logic',
                 action: () => {
@@ -192,7 +192,7 @@ const Suggestions = {
 
         if (jobs.length > 2 && !hasEnvVars) {
             suggestions.push({
-                icon: '',
+                icon: 'fas fa-key',
                 title: 'Configure environment variables',
                 desc: 'Store API keys, database URLs, and other configuration',
                 action: () => {
@@ -211,7 +211,7 @@ const Suggestions = {
 
         if (jobs.length > 2 && !hasBuildJob) {
             suggestions.push({
-                icon: '',
+                icon: 'fas fa-hammer',
                 title: 'Add build job',
                 desc: 'Separate building from testing for better pipeline organization',
                 action: () => JobManager.addJob()
@@ -226,7 +226,7 @@ const Suggestions = {
 
         if (hasTestJobs && !hasDeployJob && jobs.length > 3) {
             suggestions.push({
-                icon: '',
+                icon: 'fas fa-rocket',
                 title: 'Add deployment job',
                 desc: 'Automatically deploy after successful tests',
                 action: () => JobManager.addJob()

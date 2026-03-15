@@ -9,13 +9,17 @@ const AutoFixer = {
      */
     applyFix(issue) {
         if (!issue.jobId) {
-            alert('This fix requires manual action. Please follow the instructions.');
+            if (window.showNotification) {
+                window.showNotification('This fix requires manual action. Please follow the instructions.', 'info');
+            }
             return;
         }
 
         const job = AppState.getJob(issue.jobId);
         if (!job) {
-            alert('Job not found. Please try again.');
+            if (window.showNotification) {
+                window.showNotification('Job not found. It may have been deleted.', 'warning');
+            }
             return;
         }
 
@@ -55,8 +59,15 @@ const AutoFixer = {
                 this.removeEmptyStep(job, issue);
                 break;
             default:
-                alert('This fix requires manual action. Please follow the instructions in the validation message.');
+                if (window.showNotification) {
+                    window.showNotification('This fix requires manual action. Please follow the instructions in the validation message.', 'info');
+                }
                 return;
+        }
+
+        // Save state for undo support
+        if (window.EnhancedUI && window.EnhancedUI.saveState) {
+            window.EnhancedUI.saveState();
         }
 
         // Show success message
@@ -74,10 +85,10 @@ const AutoFixer = {
     fixEmptyCheckout(job, issue) {
         // Find the empty step
         const emptyStepIndex = job.steps.findIndex(s => 
-            s.type === 'run' && !s.val.trim() && 
-            (s.name.toLowerCase().includes('checkout') || 
-             s.name.toLowerCase().includes('clone') ||
-             s.name.toLowerCase().includes('pull code'))
+            s.type === 'run' && !(s.val || '').trim() && 
+            ((s.name || '').toLowerCase().includes('checkout') || 
+             (s.name || '').toLowerCase().includes('clone') ||
+             (s.name || '').toLowerCase().includes('pull code'))
         );
 
         if (emptyStepIndex !== -1) {
@@ -99,7 +110,7 @@ const AutoFixer = {
     removeEmptyStep(job, issue) {
         // Find the first empty run step
         const emptyStepIndex = job.steps.findIndex(s => 
-            s.type === 'run' && !s.val.trim()
+            s.type === 'run' && !(s.val || '').trim()
         );
 
         if (emptyStepIndex !== -1) {
@@ -282,23 +293,55 @@ const AutoFixer = {
      * Reorder steps
      */
     reorderSteps(job, issue) {
-        // Find install and test steps
-        const installIndex = job.steps.findIndex(s => 
-            s.val && (s.val.includes('npm ci') || s.val.includes('pip install'))
-        );
-        const testIndex = job.steps.findIndex(s => 
-            s.val && (s.val.includes('test') || s.val.includes('jest') || s.val.includes('pytest'))
-        );
+        let fixed = false;
 
-        if (installIndex > testIndex && testIndex !== -1 && installIndex !== -1) {
-            // Move install step before test step
-            const installStep = job.steps.splice(installIndex, 1)[0];
-            job.steps.splice(testIndex, 0, installStep);
+        // Case 1: Install step is after test step
+        const installIndex = job.steps.findIndex(function(s) {
+            return s.val && (
+                s.val.includes('npm ci') ||
+                s.val.includes('npm install') ||
+                s.val.includes('pip install') ||
+                s.val.includes('yarn install') ||
+                s.val.includes('bundle install')
+            );
+        });
+        const testIndex = job.steps.findIndex(function(s) {
+            return s.val && (
+                s.val.includes('npm test') ||
+                s.val.includes('pytest') ||
+                s.val.includes('jest') ||
+                s.val.includes('mvn test') ||
+                s.val.includes('go test')
+            );
+        });
 
+        if (installIndex !== -1 && testIndex !== -1 && installIndex > testIndex) {
+            var movedStep = job.steps.splice(installIndex, 1)[0];
+            job.steps.splice(testIndex, 0, movedStep);
+            fixed = true;
+        }
+
+        // Case 2: Docker login is after docker push
+        var loginIndex = job.steps.findIndex(function(s) {
+            return s.val && s.val.includes('docker login');
+        });
+        var pushIndex = job.steps.findIndex(function(s) {
+            return s.val && s.val.includes('docker push');
+        });
+
+        if (loginIndex !== -1 && pushIndex !== -1 && loginIndex > pushIndex) {
+            var movedLoginStep = job.steps.splice(loginIndex, 1)[0];
+            job.steps.splice(pushIndex, 0, movedLoginStep);
+            fixed = true;
+        }
+
+        if (fixed) {
             JobManager.renderStepsList(job);
             YamlGenerator.updateYaml();
         } else {
-            alert('Steps are already in the correct order or could not be reordered automatically.');
+            if (window.showNotification) {
+                window.showNotification('Steps appear to already be in the correct order.', 'info');
+            }
         }
     },
 
@@ -306,78 +349,104 @@ const AutoFixer = {
      * Show help for creating connections (can't auto-fix)
      */
     showConnectionHelp(job, issue) {
-        alert('To create this connection:\n\n' +
-              '1. Find a test job on the canvas\n' +
-              '2. Click and drag from the BOTTOM circle of the test job\n' +
-              '3. Drop on the TOP circle of "' + job.name + '"\n' +
-              '4. This creates a dependency\n\n' +
-              'This ensures tests run before deployment!');
+        if (window.showNotification) {
+            window.showNotification('To connect: drag from the bottom circle of a test job to the top circle of "' + job.name + '".', 'info');
+        }
     },
 
     /**
      * Show success message
      */
     showSuccessMessage(issueTitle) {
-        // Create a temporary success notification
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95));
-            color: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            z-index: 10000;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideIn 0.3s ease-out;
-        `;
+        // Use the app's built-in notification system instead of custom DOM elements
+        var cleanTitle = issueTitle.replace(/^\[[^\]]+\]\s*/, '').split(' - ')[0];
+        if (window.showNotification) {
+            window.showNotification('Fix applied: ' + cleanTitle, 'success');
+        }
+    },
 
-        notification.innerHTML = `
-            <i class="fas fa-check-circle" style="font-size: 20px;"></i>
-            <span>Fix Applied! ${issueTitle.replace(/^[^\s]+\s*/, '').split(' - ')[0]}</span>
-        `;
+    /**
+     * Fix all auto-fixable issues at once
+     */
+    fixAll() {
+        const fixButtons = document.querySelectorAll('.auto-fix-btn');
+        let fixCount = 0;
 
-        document.body.appendChild(notification);
-
-        // Add animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from {
-                    transform: translateX(400px);
-                    opacity: 0;
+        fixButtons.forEach(button => {
+            try {
+                const issueDataStr = button.dataset.issueData;
+                if (issueDataStr) {
+                    const issueData = JSON.parse(issueDataStr);
+                    if (issueData.autoFixable) {
+                        this.applyFixSilent(issueData);
+                        fixCount++;
+                    }
                 }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
+            } catch (error) {
+                console.log('Could not apply fix:', error);
             }
-            @keyframes slideOut {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(400px);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
+        });
 
-        // Remove after 3 seconds
-        setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease-out';
-            setTimeout(() => {
-                document.body.removeChild(notification);
-                document.head.removeChild(style);
-            }, 300);
-        }, 3000);
+        if (fixCount > 0 && window.EnhancedUI && window.EnhancedUI.saveState) {
+            window.EnhancedUI.saveState();
+        }
+
+        if (fixCount > 0) {
+            if (window.showNotification) {
+                window.showNotification('Applied ' + fixCount + ' automatic fix' + (fixCount > 1 ? 'es' : '') + '!', 'success');
+            }
+            // Re-run validation after all fixes
+            setTimeout(function() {
+                Validation.updateValidation();
+            }, 500);
+        } else {
+            if (window.showNotification) {
+                window.showNotification('No automatic fixes available. Please follow the manual instructions.', 'info');
+            }
+        }
+    },
+
+    /**
+     * Apply a fix without showing per-fix success notifications
+     * Used by fixAll to avoid spamming notifications
+     */
+    applyFixSilent(issue) {
+        if (!issue.jobId) return;
+
+        const job = AppState.getJob(issue.jobId);
+        if (!job) return;
+
+        switch(issue.fixType) {
+            case 'add-docker-pull':
+                this.addDockerPullStep(job, issue);
+                break;
+            case 'add-docker-push':
+                this.addDockerPushStep(job, issue);
+                break;
+            case 'add-docker-login':
+                this.addDockerLoginStep(job, issue);
+                break;
+            case 'add-dependencies':
+                this.addDependenciesStep(job, issue);
+                break;
+            case 'add-artifact-download':
+                this.addArtifactDownloadStep(job, issue);
+                break;
+            case 'remove-matrix':
+                this.removeMatrix(job);
+                break;
+            case 'reorder-steps':
+                this.reorderSteps(job, issue);
+                break;
+            case 'fix-empty-checkout':
+                this.fixEmptyCheckout(job, issue);
+                break;
+            case 'remove-empty-step':
+                this.removeEmptyStep(job, issue);
+                break;
+            default:
+                break;
+        }
     }
 };
 

@@ -1,13 +1,15 @@
 /**
- * FIXED Templates Module
- * All templates now generate WORKING pipelines that execute successfully
+ * Templates Module
+ * All templates generate WORKING pipelines that execute successfully
+ * Icons use Font Awesome classes instead of emojis
  */
 
 const Templates = {
     'nodejs-jest': {
         name: 'Node.js + Jest',
-        icon: '🟩',
-        description: 'Unit & integration tests with Jest',
+        icon: 'fab fa-node-js',
+        iconColor: '#68a063',
+        description: 'Unit and integration tests with Jest',
         jobs: [
             {
                 name: 'Install Dependencies',
@@ -50,7 +52,8 @@ const Templates = {
 
     'python-pytest': {
         name: 'Python + Pytest',
-        icon: '🐍',
+        icon: 'fab fa-python',
+        iconColor: '#3776ab',
         description: 'Python testing with pytest',
         jobs: [
             {
@@ -82,7 +85,8 @@ const Templates = {
 
     'fullstack': {
         name: 'Full-Stack App',
-        icon: '🌐',
+        icon: 'fas fa-layer-group',
+        iconColor: '#6366f1',
         description: 'Frontend + Backend + E2E tests',
         jobs: [
             {
@@ -140,8 +144,9 @@ const Templates = {
 
     'mobile-app': {
         name: 'Mobile App Tests',
-        icon: '📱',
-        description: 'iOS & Android testing',
+        icon: 'fas fa-mobile-alt',
+        iconColor: '#10b981',
+        description: 'iOS and Android testing',
         jobs: [
             {
                 name: 'iOS Tests',
@@ -169,7 +174,8 @@ const Templates = {
 
     'api-testing': {
         name: 'API Testing',
-        icon: '🔌',
+        icon: 'fas fa-plug',
+        iconColor: '#f59e0b',
         description: 'REST API testing suite',
         jobs: [
             {
@@ -215,9 +221,10 @@ const Templates = {
     },
 
     'docker-deployment': {
-        name: 'Docker Build & Deploy',
-        icon: '🐳',
-        description: 'Build, scan, and deploy Docker images (FIXED - now works!)',
+        name: 'Docker Build and Deploy',
+        icon: 'fab fa-docker',
+        iconColor: '#2496ed',
+        description: 'Build, scan, and deploy Docker images',
         jobs: [
             {
                 name: 'Build Docker Image',
@@ -256,18 +263,56 @@ const Templates = {
         ]
     },
 
+    'java-maven': {
+        name: 'Java + Maven',
+        icon: 'fab fa-java',
+        iconColor: '#ed8b00',
+        description: 'Java testing with Maven and JUnit',
+        jobs: [
+            {
+                name: 'Build',
+                stage: 'build',
+                os: 'ubuntu-latest',
+                category: 'none',
+                steps: [
+                    { type: 'checkout', name: 'Checkout Code', val: '' },
+                    { type: 'action', name: 'Setup JDK', val: 'actions/setup-java@v3' },
+                    { type: 'run', name: 'Build with Maven', val: 'mvn clean package -DskipTests' }
+                ],
+                artifacts: ['target/*.jar']
+            },
+            {
+                name: 'Unit Tests',
+                stage: 'test',
+                os: 'ubuntu-latest',
+                category: 'unit',
+                steps: [
+                    { type: 'checkout', name: 'Checkout Code', val: '' },
+                    { type: 'action', name: 'Setup JDK', val: 'actions/setup-java@v3' },
+                    { type: 'run', name: 'Run Tests', val: 'mvn test' }
+                ],
+                artifacts: ['target/surefire-reports/**']
+            }
+        ]
+    },
+
     'blank': {
         name: 'Start from Scratch',
-        icon: '📄',
-        description: 'Empty pipeline - build your own!',
+        icon: 'fas fa-file',
+        iconColor: '#6b7280',
+        description: 'Empty pipeline - build your own',
         jobs: []
     }
 };
 
-// Helper function to get all template keys
+/**
+ * Get all template keys
+ */
 const getTemplateKeys = () => Object.keys(Templates);
 
-// Helper function to get a specific template
+/**
+ * Get a specific template
+ */
 const getTemplate = (key) => Templates[key];
 
 // Make it available globally

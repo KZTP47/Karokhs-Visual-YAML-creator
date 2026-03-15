@@ -16,7 +16,7 @@ const EnhancedUI = {
     init() {
         this.setupKeyboardShortcuts();
         this.injectStepLibraryModal();
-        this.enhanceStepEditor();
+        // Step editor buttons are now in HTML directly
         this.addQuickActionButtons();
         this.setupNotificationSystem();
         this.improveEmptyStates();
@@ -201,7 +201,7 @@ const EnhancedUI = {
                     <h2>Step Library</h2>
                     <input type="text" id="step-search" placeholder="Search steps..." 
                            oninput="EnhancedUI.searchSteps(this.value)">
-                    <span class="modal-close" onclick="EnhancedUI.closeStepLibrary()">×</span>
+                    <span class="modal-close" onclick="EnhancedUI.closeStepLibrary()">&times;</span>
                 </div>
                 <div class="step-library-body">
                     <div class="step-categories" id="step-categories"></div>
@@ -508,11 +508,34 @@ const EnhancedUI = {
         const stepsSection = document.getElementById('steps-section');
         if (!stepsSection) return;
 
-        // Replace the "+ Add" button with an enhanced version
+        // Find the existing "+ Add" button
         const addButton = stepsSection.querySelector('button.secondary');
         if (addButton) {
-            addButton.innerHTML = '<i class="fas fa-book-open"></i> Browse Step Library';
-            addButton.onclick = () => this.openStepLibrary();
+            // Create a container for both buttons
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.gap = '8px';
+            buttonContainer.style.marginTop = '8px';
+
+            // Create the simple "+ Add Step" button
+            const simpleAddBtn = document.createElement('button');
+            simpleAddBtn.className = 'secondary';
+            simpleAddBtn.style.flex = '1';
+            simpleAddBtn.innerHTML = '<i class="fas fa-plus"></i> Add Step';
+            simpleAddBtn.onclick = () => JobManager.addStep();
+
+            // Create the "Browse Library" button
+            const libraryBtn = document.createElement('button');
+            libraryBtn.className = 'secondary';
+            libraryBtn.style.flex = '1';
+            libraryBtn.innerHTML = '<i class="fas fa-book-open"></i> Library';
+            libraryBtn.onclick = () => this.openStepLibrary();
+
+            buttonContainer.appendChild(simpleAddBtn);
+            buttonContainer.appendChild(libraryBtn);
+
+            // Replace the old button with the container
+            addButton.parentNode.replaceChild(buttonContainer, addButton);
         }
     },
 
